@@ -1,0 +1,44 @@
+﻿@page "/Flights"
+@using Assignment2Airplane.Components.Pages.CFiles;
+
+<h1>Counter</h1>
+
+
+
+
+@code {
+    public string newFlightCode;
+    public string newAirline;
+    public string newOrigin;
+    public string newDestination;
+    public string newWeekday;
+    public string newTime;
+    public double newCost;
+    public string newCitizenship;
+    public string newResCode;
+
+    FlightManager FlightsManager = new FlightManager();
+    List<Flight> flights = FlightManager.Flights;
+    List<Airports> airports = FlightManager.Airport;
+
+    public string origin;
+    public string destination;
+    public string weekday;
+    private void FindFlight()
+    {
+        if(origin == null)
+        {
+            origin = "Any";   
+        }
+        if(destination == null)
+        {
+            destination = "Any";
+        }
+        if(weekday == null)
+        {
+            weekday = "Any";
+        }
+        flights = FlightManager.FindFlights(origin, destination, weekday);
+    }
+
+}
