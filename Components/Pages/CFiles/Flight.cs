@@ -6,6 +6,10 @@ using System.Threading.Tasks;
 
 namespace Assignment2Airplane.Components.Pages.CFiles
 {
+    /// <summary>
+    /// Flight class has a ll the data for each flight
+    /// Also contains a ToString override to display each part of the flight as a string
+    /// </summary>
     internal class Flight
     {
         private string flightCode;
@@ -67,6 +71,10 @@ namespace Assignment2Airplane.Components.Pages.CFiles
             this.time = time;
             this.seats = seats;
             this.seatCost = seatCost;
+        }
+        public string ToString()
+        {
+            return $"{FlightCode},{Airline},{Origin},{Destination},{Weekday},{Time},{Seats},{SeatCost}";
         }
     }
 }

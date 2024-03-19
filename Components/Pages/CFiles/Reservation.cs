@@ -6,6 +6,10 @@ using System.Threading.Tasks;
 
 namespace Assignment2Airplane.Components.Pages.CFiles
 {
+    /// <summary>
+    /// Reservation is the class that descibes each reservation object, holds the data that correlates to each reservation
+    /// Has a ToString override to display each item of the reservation
+    /// </summary>
     internal class Reservation
     {
         private string reservationCode;
@@ -44,13 +48,13 @@ namespace Assignment2Airplane.Components.Pages.CFiles
             get { return citizenship; }
             set { citizenship = value; }
         }
-        private bool status;
-        public bool Status
+        private string status;
+        public string Status
         {
             get { return status; }
             set { status = value; }
         }
-        public Reservation(string reservationCode, string flightCode, string airline, double cost, string name, string citizenship,bool status)
+        public Reservation(string reservationCode, string flightCode, string airline, double cost, string name, string citizenship,string status)
         {
             ReservationCode = reservationCode;
             FlightCode = flightCode;
@@ -60,7 +64,7 @@ namespace Assignment2Airplane.Components.Pages.CFiles
             Citizenship = citizenship;
             Status = status;
         }
-        public string toString()
+        public override string ToString()
         {
             return $"{ReservationCode},{FlightCode},{Airline},{Cost},{Name},{Citizenship},{Status}";
         }

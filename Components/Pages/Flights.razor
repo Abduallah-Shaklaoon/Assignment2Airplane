@@ -1,12 +1,254 @@
 ﻿@page "/Flights"
+
 @using Assignment2Airplane.Components.Pages.CFiles;
 
-<h1>Counter</h1>
+<style>
+    *{
+        width: 100%;
+    }
+    .Flight-finder{
+        width: 100%;
+        display: flex;
+    }
+    .origin, .desination, .weekday, .flight-button{
+        flex-direction: column;
+        margin: 10px;
+    }
+    .button{
+        text-align: center;
+        border-radius: 8px;
+        border: 3px solid #043999;
+        background-color: #0A57E6;
+        color: white;
+    }
+    .button:hover{
+        border: 3px solid #043999;
+        background-color: #83B0FD;
+        color: black;
+    }
+    .fields{
+        border-radius: 4px;
+        border: 1px ridge lightgray;
+        margin-bottom: 10px
+    }
+    .Find-flights-button{
+        height: 30px;
+    }
+    .header{
+        text-align: center;
+    }
+
+    .selected-flight, .reservation-manager, .reservations-list, .Reservation-Updater{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+    }
+
+    .reserve-button, .reservation-finder-button, .confirm-change{
+        width: 30%;
+        margin-bottom: 10px;
+    }
+    .status-green{
+        border: 3px solid #01860E;
+        background-color: #65FC74;
+        color: black;
+        width: 25%;
+        margin-bottom: 15px;
+    }
+    .status-green:hover{
+        border: 3px solid #01860E;
+        background-color: #02CC16;
+        color: white;
+    }
+    .status-red{
+        border: 3px solid #C50002;
+        background-color: #FD595B;
+        color: black;
+        width: 25%;
+        margin-bottom: 15px;
+    }
+    .status-red:hover{
+        border: 3px solid #C50002;
+        background-color: #FD0103;
+        color: white;
+        width: 25%;
+    }
+
+
+</style>
+<h1 class="header">Flights & Reservation Manager</h1>
+<h2 class ="header">Flight finder</h2>
+<div class="Flight-finder">
+    <div class="origin">
+        <label for="Origin">Origin:</label>
+        <select class="Origin fields" @bind="fieldOrigin">
+    
+            <option value="Any">Any</option>
+            @foreach(Airports airport in airports)
+            {
+                <option value=@airport.ShortName>@airport.ShortName</option>
+            }
+        </select>
+    </div>
+    <div class="desination">
+        <label for="Destination">Destination:</label>
+        <select class="Destination fields" @bind="fieldDestination">
+            <option value="Any">Any</option>
+            @foreach (Airports airport in airports)
+            {
+                <option value=@airport.ShortName>@airport.ShortName</option>
+            }
+        </select>
+    </div>
+    <div class="weekday">
+        <label for="Weekday">Weekday:</label>
+        <select class="Weekday fields" @bind="fieldWeekday">
+            <option value="Any">Any</option>
+            <option value="Monday">Monday</option>
+            <option value="Tuesday">Tuesday</option>
+            <option value="Wednesday">Wednesday</option>
+            <option value="Thursday">Thursday</option>
+            <option value="Friday">Friday</option>
+            <option value="Saturday">Saturday</option>
+            <option value="Sunday">Sunday</option>
+        </select>
+    </div>
+    <div class="flight-button">
+        <label for="Find-flights-button button"></label>
+        <button class="Find-flights-button button" @onclick="@FindFlight">Find Flights</button>
+    </div>
+
+</div>
+<div class="Flights-list">
+    <h2 class="header">Flights</h2>
+    <select class="Loaded-Flights fields selects" @onchange="@FillFields">
+        @if (flights.Count() == 0)
+        {
+            if (flightFindAttempt)
+            {
+                <option value="">No flights found! change your options and try again.</option>
+            }
+            else
+            {
+                <option value="">Click Find Flights above to load the list!</option>
+            }
+
+        }
+        else
+        {
+            <option value="">List of all flights:</option>
+            foreach (Flight flight in flights)
+            {
+                <option value=@flight.FlightCode>@flight.ToString()</option>
+            }
+        }
+    </select>
+
+</div>
+@if (flightError)
+{
+    <p>@flightErrorMessage</p>
+    <button class="error-button button" @onclick="FlightFinderErrorClear">Ok</button>
+}
+else
+{
+    <div class="selected-flight">
+        <label>Flight code:</label>
+        <input type="text" class="fields" placeholder="Flight" value="@newFlightCode" disabled>
+        <label>Airline:</label>
+        <input type="text" class="fields" placeholder="Airline" value="@newAirline" disabled>
+        <label>Day:</label>
+        <input type="text" class="fields" placeholder="Weekday" value="@newWeekday" disabled>
+        <label>Time:</label>
+        <input type="text" class="fields" placeholder="Time" value="@newTime" disabled>
+        <label>Cost:</label>
+        <input type="text" class="fields" placeholder="Cost" value="@newCost" disabled>
+        <label>Name:</label>
+        <input type="text" class="fields" placeholder="Name" @bind="@newName">
+        <label>Citizenship:</label>
+        <input type="text" class="fields" placeholder="Citizenship" @bind="@newCitizenship">
+        <button class="reserve-button button" @onclick="MakeReservation">Reserve</button>
+        <p>@recentReservation</p>
+    </div>
+}
+
+<h2 class="header">Reservation Search</h2>
+<div class="reservation-manager">
+    <label>Code:</label>
+    <input type="text" class="fields" placeholder="Reservation Code" id="code" @bind="userResCode">
+    <label>Airline:</label>
+    <input type="text" class="fields" placeholder="Airline Name" id="code" @bind="userAirline">
+    <label>Name:</label>
+    <input type="text" class="fields" placeholder="Name" id="code" @bind="userName">
+    <button class="reservation-finder-button button" @onclick="ViewReservations">Find Reservations</button>
+</div>
+<h2 class="header">Found Reservations</h2>
+<div class="reservations-list">
+    <select class="fields" @onchange="SelectReservation">
+        <option>List of Reservations</option>
+        @foreach (Reservation res in resList)
+        {
+            <option value=@res.ReservationCode>@res.ToString()</option>
+        }
+    </select>
+
+    @if (selectedReservation != null)
+    {
+        @if (resError)
+        {
+            <p class="Error">@errorResMessage</p>
+            <button class="Error button" @onclick="ClearResError">Ok</button>
+        }
+        else
+        {
+            <div class="Reservation-Updater">
+                <h4 class="header">Selected Reservation</h4>
+                <p>@selectedReservation.ToString()</p>
+                <label>Name:</label>
+                <input type="text" class="fields" placeholder="@nameUpdate" id="code" @bind="nameUpdate">
+                <label>Citizenship:</label>
+                <input type="text" class="fields" placeholder="@citizenshipUpdate" id="code" @bind="citizenshipUpdate">
+                <label>Status:</label>
+                @if (statusUpdate == "Active")
+                {
+                    <button class="status-green button" @onclick="ChangeStatus">Active</button>
+                }
+                else
+                {
+                    <button class="status-red button" @onclick="ChangeStatus">Not Active</button>
+                }
+
+                <button class="confirm-change button" @onclick="UpdateReservation">Confirm Changes</button>
+            </div>
+        }
+
+    }
+</div>
 
 
 
 
-@code {
+@code{
+    /// <summary>
+    /// The code in this area interacts with the front end and sends it to the backend of the program to be able to reserve and change reservations for flights.
+    /// The first part of the application focuses on reserving a flight, it allows the user to select the origin, destination and week day, and if there are seats 
+    ///  availabe they can book the flight.
+    /// The second part of the program handles finding reservations and changing the resercations.
+    /// There is error checking to make sure the user does not send in a null value where there is supposed to be a inputted value from the user
+    /// </summary>
+
+    //All object variables allow their functionality to be used, fieldFlight holds the flight onject that enters the fields for the user to reserve, 
+    // and newReservation holds the new reservation a user makes
+    FlightManager FlightsManager = new FlightManager();
+    ReservationManager ReservationManager = new ReservationManager();
+    List<Flight> flights = new List<Flight>();
+    List<Airports> airports = FlightManager.Airport;
+    Flight fieldFlight;
+    Reservation newReservation;
+    //All new... variables hold the data from a flight that the user can reserve, they are displayed for the user to see.
+    //newName, newCitizenship are from the user and cant be null, newRescode is generated when the user reserves a flight, 
+    // and field... are all from the drop down list the user can select from
     public string newFlightCode;
     public string newAirline;
     public string newOrigin;
@@ -14,31 +256,229 @@
     public string newWeekday;
     public string newTime;
     public double newCost;
+    public string newName;
     public string newCitizenship;
     public string newResCode;
-
-    FlightManager FlightsManager = new FlightManager();
-    List<Flight> flights = FlightManager.Flights;
-    List<Airports> airports = FlightManager.Airport;
-
-    public string origin;
-    public string destination;
-    public string weekday;
+    public string fieldOrigin;
+    public string fieldDestination;
+    public string fieldWeekday;
+    //Flight error keeps track if the user has put the program into an error state and gets them to correct if they have done so
+    public bool flightFindAttempt = false;
+    public bool flightError = false;
+    public string flightErrorMessage;
+    //recentReservation displays what has recently been displayed
+    string recentReservation;
+    //Find flight clears any fields that might have data in them, and finds flights that have the origin, destination and weekday the user requested
     private void FindFlight()
     {
-        if(origin == null)
+        flightFindAttempt = true;
+        newFlightCode = "";
+        newAirline = "";
+        newOrigin = "";
+        newDestination = "";
+        newWeekday = "";
+        newTime = "";
+        newCost = 0;
+        newName = "";
+        newCitizenship = "";
+        newResCode = "";
+        fieldFlight = null;
+
+        if(string.IsNullOrEmpty(fieldOrigin))
         {
-            origin = "Any";   
+            fieldOrigin = "Any";
         }
-        if(destination == null)
+        if (string.IsNullOrEmpty(fieldDestination))
         {
-            destination = "Any";
+            fieldDestination = "Any";
         }
-        if(weekday == null)
+        if (string.IsNullOrEmpty(fieldWeekday))
         {
-            weekday = "Any";
+            fieldWeekday = "Any";
         }
-        flights = FlightManager.FindFlights(origin, destination, weekday);
+        flights = FlightManager.FindFlights(fieldOrigin, fieldDestination, fieldWeekday);
+    }
+    //fill fields takes the flight object the user selects and fills all fields with the data appropriately.
+    private void FillFields(ChangeEventArgs arg)
+    {
+
+        newFlightCode = arg.Value.ToString();
+        fieldFlight = FlightManager.FindFlightCode(newFlightCode);
+        if (fieldFlight != null)
+        {
+
+            newAirline = fieldFlight.Airline;
+            newOrigin = fieldFlight.Origin;
+            newDestination = fieldFlight.Destination;
+            newWeekday = fieldFlight.Weekday;
+            newTime = fieldFlight.Time;
+            newCost = fieldFlight.SeatCost;
+        }
+        else
+        {
+            newFlightCode = "";
+        }
+
+    }
+    //Make Reservation tries to reserve a flight the user requests, it catches any errors such as a null argument being passed through, or the flight is fully booked
+    // After reserving the flight it clears all the flight fields, and adjusts the seat count
+    private void MakeReservation()
+    {
+
+        try
+        {
+            if(string.IsNullOrEmpty(newFlightCode) || string.IsNullOrEmpty(newName) || string.IsNullOrEmpty(newCitizenship))
+            {
+                throw new ArgumentNullException();
+            }
+            Flight resFlight = FlightManager.FindFlightCode(newFlightCode);
+            if(resFlight.Seats <= 0)
+            {
+                throw new ArgumentException();
+            }
+            newResCode = ReservationManager.GenerateReservationCode();
+            newReservation = new Reservation(newResCode, newFlightCode, newAirline, newCost, newName, newCitizenship, "Active");
+            recentReservation = "New Reservation: " + newReservation.ToString();
+            ReservationManager.AddReservation(newReservation);
+            resFlight.Seats = resFlight.Seats - 1;
+            FlightsManager.SaveFlights();
+        }
+        catch(ArgumentNullException e)
+        {
+            flightError = true;
+            flightErrorMessage = "A null value was attempted to be passed through either the flight code, name field or citizenship field.";
+        }
+        catch(ArgumentException e)
+        {
+            flightError = true;
+            flightErrorMessage = "You can not book any seats on this flight! There are no more seats available.";
+        }
+        newFlightCode = "";
+        newAirline = "";
+        newOrigin = "";
+        newDestination = "";
+        newWeekday = "";
+        newTime = "";
+        newCost = 0;
+        newName = "";
+        newCitizenship = "";
+        newResCode = "";
+        fieldFlight = null;
+        newReservation = null;
+
+    }
+    //This triggers after the user clicks the button to confirm they have read what caused the error
+    public void FlightFinderErrorClear()
+    {
+        flightError = false;
+        newFlightCode = "";
+        newAirline = "";
+        newOrigin = "";
+        newDestination = "";
+        newWeekday = "";
+        newTime = "";
+        newCost = 0;
+        newName = "";
+        newCitizenship = "";
+        newResCode = "";
+        fieldFlight = null;
+        newReservation = null;
+        fieldOrigin = "Any";
+        fieldDestination = "Any";
+        fieldWeekday= "Any";
+        recentReservation = "";
     }
 
+    //List holds all found reservations, selected is which one is selected
+    //user... are all fields populated from the users entry to find reservations that match what they search
+    //...Update are all fields the user can update on the reservation
+    List<Reservation> resList = new List<Reservation>();
+    Reservation selectedReservation;
+    public string userResCode;
+    public string userAirline;
+    public string userName;
+    public string nameUpdate;
+    public string citizenshipUpdate;
+    public string statusUpdate;
+    //If the user has created an error by passing a null value this becomes true and the message is created correlating to the error
+    public bool resError = false;
+    public string errorResMessage;
+    //After the user inputs what they want into the fields, all reservations are found that match and shown to the user
+    private void ViewReservations()
+    {
+        if (string.IsNullOrEmpty(userResCode))
+        {
+            userResCode = "Any";
+        }
+        if (string.IsNullOrEmpty(userAirline))
+        {
+            userAirline = "Any";
+        }
+        if (string.IsNullOrEmpty(userName))
+        {
+            userName = "Any";
+        }
+        resList = ReservationManager.GetReservations(userResCode.ToUpper(), userAirline.ToUpper(), userName.ToUpper());
+    }
+    //the reservation update fields are populated with what the user selects
+    private void SelectReservation(ChangeEventArgs arg)
+    {
+        selectedReservation = ReservationManager.GetResByCode(arg.Value.ToString());
+        if(selectedReservation != null)
+        {
+            nameUpdate = selectedReservation.Name;
+            citizenshipUpdate = selectedReservation.Citizenship;
+            statusUpdate = selectedReservation.Status;
+        }
+        else
+        {
+            selectedReservation = null;
+        }
+
+
+    }
+    //Tries to upate the reservaton with the data the user puts in, catches any null values, then clears the selected reservation from being selected
+    private void UpdateReservation()
+    {
+        try
+        {
+            if(string.IsNullOrEmpty(nameUpdate) || string.IsNullOrEmpty(citizenshipUpdate))
+            {
+                throw new ArgumentNullException();
+            }
+            ReservationManager.ReservationUpdate(selectedReservation, nameUpdate, citizenshipUpdate, statusUpdate);
+            FlightsManager.SaveFlights();
+            selectedReservation = null;
+            nameUpdate = "";
+            citizenshipUpdate = "";
+            statusUpdate = "";
+        }
+        catch(ArgumentNullException e)
+        {
+            resError = true;
+            errorResMessage = "A null value was attempted to be passed through the name update or citizenship update.";
+        }
+
+    }
+    //correlates to the status change button, if the user wants to make a reservation active or inactive
+    private void ChangeStatus()
+    {
+        if(statusUpdate == "Active")
+        {
+            statusUpdate = "Inactive";
+        }
+        else
+        {
+            statusUpdate = "Active";
+        }
+    }
+    //clears the reservation error once the user clicks the button
+    public void ClearResError()
+    {
+        resError = false;
+        selectedReservation = null;
+        nameUpdate = "";
+        citizenshipUpdate = "";
+        statusUpdate = "";
+    }
 }
